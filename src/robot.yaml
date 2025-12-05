@@ -1,9 +1,11 @@
 tasks:
-  Run RPA:
-    shell: python src/task.py
+  Run:
+    shell: python src/tasks.py
 
-environment:
-  configs:
-    - conda.yaml
-  path:
-    - .
+condaConfigFile: conda.yaml
+artifactsDir: output
+
+PATH:
+  - .
+PYTHONPATH:
+  - .
