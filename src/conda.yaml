@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.12
+  - pip=23.2.1
+  - pip:
+    - playwright>=1.40.0
+    - python-dotenv>=1.0.0
+    - robocorp-tasks

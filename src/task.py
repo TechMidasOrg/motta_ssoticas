@@ -12,10 +12,10 @@ from logger import logger
 # Load environment variables
 load_dotenv()
 
-def main(keep_open=True):
+def main(keep_open=True, headless=True):
     with sync_playwright() as p:
-        # Launch browser maximized
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+        # Launch browser (headless by default unless specified)
+        browser = p.chromium.launch(headless=headless, args=["--start-maximized"] if not headless else [])
         context = browser.new_context(no_viewport=True)
         page = context.new_page()
         
@@ -80,8 +80,10 @@ if __name__ == "__main__":
     # Let's add a flag --keep-open instead.
     
     parser.add_argument("--keep-open", action="store_true", help="Keep browser open after execution")
+    parser.add_argument("--headed", action="store_true", help="Run browser in visible (headed) mode")
     args = parser.parse_args()
     
     should_keep_open = args.keep_open
+    is_headless = not args.headed
     
-    main(keep_open=should_keep_open)
+    main(keep_open=should_keep_open, headless=is_headless)

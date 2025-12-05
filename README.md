@@ -1,50 +1,78 @@
-# SSotica RPA Client Registration
+# Projeto de RPA - Cadastro de Clientes SSotica
 
-Automated bot to register mock clients on the SSotica platform.
+Este projeto automatiza o cadastro de clientes na plataforma SSotica utilizando Python e Playwright.
 
-## Features
-- **Multi-Execution**: Runs 10 iterations of client creation in one session.
-- **Dynamic Data**: Generates unique client names and randomized phone numbers.
-- **Robustness**: 
-  - Handles duplicate phone fields automatically.
-  - Selects the correct "Principal" radio button.
-  - Retries navigation and login waiting.
-- **Observation Data**: Fills detailed observation fields.
+## Funcionalidades
 
-## Prerequisites
-- Python 3.8+
-- Playwright
+- **Login Automático**: Acessa a plataforma com credenciais seguras.
+- **Navegação Inteligente**: Vai até a secção de clientes e inicia um novo cadastro.
+- **Dados Dinâmicos**: Gera nomes e telefones aleatórios (ex: "Teste Cliente Mock 03").
+- **Resiliência**:
+    - Trata popups (OneSignal) automaticamente.
+    - Verifica e remove campos de telefone duplicados.
+    - Usa esperas inteligentes e timeouts configurados para redes lentas.
+- **Observações Detalhadas**: Preenche o campo de observações com dados de receita e intenção.
+- **Execução Headless**: Roda em segundo plano por padrão.
 
-## Installation
+## Pré-requisitos
 
-1. Clone the repository.
-2. Install dependencies:
-   ```sh
+- Python 3.10+
+- Conta na plataforma SSotica
+- `pip` instalado
+
+## Instalação
+
+1. Clone o repositório.
+2. Instale as dependências:
+   ```bash
    pip install -r requirements.txt
-   ```
-3. Install Playwright browsers:
-   ```sh
-   playwright install
+   playwright install chromium
    ```
 
-## Configuration
+## Configuração
 
-1. Copy `.env.example` to `.env`:
-   ```sh
-   cp .env.example .env
+1. Crie um arquivo `.env` na raiz do projeto (use `.env.example` como base):
    ```
-2. Edit `.env` and add your SSotica credentials.
+   EMAIL=seu_email@exemplo.com
+   PASSWORD=sua_senha
+   ```
 
-## Usage
+## Execução
 
-Run the script:
-```sh
-python src/main.py
+### Modo Padrão (Headless)
+O robô roda sem abrir a janela do navegador:
+```bash
+python src/task.py
 ```
 
-Arguments:
-- `--close`: Close the browser automatically after execution (default is to keep it open).
-
-```sh
-python src/main.py --close
+### Modo Visual (Headed)
+Para ver o navegador rodando (útil para debug):
+```bash
+python src/task.py --headed
 ```
+
+### Manter Navegador Aberto
+Para inspecionar o resultado final sem fechar o navegador:
+```bash
+python src/task.py --headed --keep-open
+```
+
+## Estrutura com Robocorp / RCC
+
+Se estiver usando Robocorp/RCC, o ambiente já está configurado em:
+- `src/conda.yaml`: Definição de dependências.
+- `src/robot.yaml`: Definição da tarefa.
+
+Para rodar via RCC:
+```bash
+rcc run
+```
+
+## Estrutura do Projeto
+
+- `src/task.py`: Ponto de entrada (Login, Loop principal).
+- `src/auth.py`: Lógica de login.
+- `src/nav.py`: Navegação pelo menu.
+- `src/client.py`: O preenchimento do formulário de cliente (Lógica pesada aqui).
+- `src/utils.py`: Tratamento de popups e handlers globais.
+- `src/logger.py`: Configuração de logs.
