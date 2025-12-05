@@ -20,8 +20,10 @@ def main(keep_open=True, headless=True):
         page = context.new_page()
         
         try:
-            email = os.getenv("EMAIL")
-            password = os.getenv("PASSWORD")
+            # email = os.getenv("EMAIL")
+            # password = os.getenv("PASSWORD")
+            email = "thiago@techmidas.com.br"
+            password = "Motta@123"
             
             if not email or not password:
                 raise ValueError("Credentials not found in .env file")
