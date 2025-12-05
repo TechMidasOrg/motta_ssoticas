@@ -1,0 +1,87 @@
+from playwright.sync_api import sync_playwright
+from auth import login
+from utils import handle_popups
+from nav import go_to_clients
+from client import register_new_client
+import os
+import argparse
+from dotenv import load_dotenv
+import random
+from logger import logger
+
+# Load environment variables
+load_dotenv()
+
+def main(keep_open=True):
+    with sync_playwright() as p:
+        # Launch browser maximized
+        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+        context = browser.new_context(no_viewport=True)
+        page = context.new_page()
+        
+        try:
+            email = os.getenv("EMAIL")
+            password = os.getenv("PASSWORD")
+            
+            if not email or not password:
+                raise ValueError("Credentials not found in .env file")
+
+            # 1. Login
+            login(page, email, password)
+            
+            # 2. Handle Dashboard Popups
+            handle_popups(page)
+            
+            # Single Execution
+            logger.info("--- Starting Single Execution ---")
+            
+            # 3. Navigate to Clients
+            go_to_clients(page)
+            
+            # 4. Register New Client
+            client_name = "Teste Cliente Mock 03"
+            # Random 11 digits
+            phone_number = f"{random.randint(11, 99)}{random.randint(900000000, 999999999)}"
+            
+            mock_obs = (
+                f"Paciente: {client_name}\n"
+                "Receita: OD -2.00, OE -1.75\n"
+                "Intenção: Compra de óculos de grau completo."
+            )
+            
+            logger.info(f"  > Creating client: {client_name}, Phone: {phone_number}")
+            register_new_client(page, client_name, phone_number, observations=mock_obs)
+            
+            logger.info("--- Finished Single Execution ---")
+            
+            logger.info("RPA Process Completed Successfully.")
+            
+            # User requested to guarantee browser doesn't close
+            if keep_open:
+                logger.info("Browser remains open. Press Ctrl+C to exit.")
+                page.pause()
+            else:
+                 logger.info("Closing browser...")
+            
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            page.screenshot(path="error_screenshot.png")
+            logger.info("Error encountered. Browser open for debugging (if --keep-open).")
+            # page.pause() # Removed to prevent Inspector from opening
+        finally:
+            pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run SSotica RPA")
+    # User requested to close browser by default now.
+    # Logic: if --close is PASSED, we close? Or default close?
+    # User said: "Garanta que o browser é fechado".
+    # So default behavior should be Close.
+    # Let's add a flag --keep-open instead.
+    
+    parser.add_argument("--keep-open", action="store_true", help="Keep browser open after execution")
+    args = parser.parse_args()
+    
+    should_keep_open = args.keep_open
+    
+    main(keep_open=should_keep_open)
