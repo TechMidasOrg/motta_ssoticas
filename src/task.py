@@ -8,9 +8,15 @@ import argparse
 from dotenv import load_dotenv
 import random
 from logger import logger
+from RPA.Robocorp.WorkItems import WorkItems
 
 # Load environment variables
 load_dotenv()
+# Robocorp WorkItems
+wi = WorkItems()
+wi.get_input_work_item()
+client_name = wi.get_work_item_variable("SEARCH")
+client_phone = wi.get_work_item_variable("PHONE")
 
 def main(keep_open=True, headless=True):
     with sync_playwright() as p:
@@ -41,9 +47,9 @@ def main(keep_open=True, headless=True):
             go_to_clients(page)
             
             # 4. Register New Client
-            client_name = "Teste Cliente Mock 03"
+            client_name = client_name
             # Random 11 digits
-            phone_number = f"{random.randint(11, 99)}{random.randint(900000000, 999999999)}"
+            phone_number = client_phone
             
             mock_obs = (
                 f"Paciente: {client_name}\n"
