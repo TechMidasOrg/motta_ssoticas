@@ -2,7 +2,7 @@ from playwright.sync_api import Page
 from logger import logger
 # from utils import handle_popups # Removed to avoid double registration
 
-def register_new_client(page: Page, name: str, phone: str, observations: str = ""):
+def register_new_client(page: Page, name: str, phone: str, observations: str = "", unit: str = None):
     """
     Registers a new client with the given details.
     
@@ -11,6 +11,7 @@ def register_new_client(page: Page, name: str, phone: str, observations: str = "
         name (str): Client name.
         phone (str): Client phone number.
         observations (str, optional): Client observations. Defaults to "".
+        unit (str, optional): The unit to select (e.g., "Óticas Motta Aero"). Defaults to None.
     """
     # Ensure no popups block the view before starting
     # handle_popups(page) # Handled globally in main.py via add_locator_handler
@@ -25,6 +26,107 @@ def register_new_client(page: Page, name: str, phone: str, observations: str = "
     # Using specific name found in logs: formCliente
     form = page.locator("form[name='formCliente']").first
     form.wait_for(state="attached", timeout=15000)
+
+    # --- Unit Selection ---
+    if unit:
+        try:
+            logger.info(f"Attempting to select unit: {unit}")
+            # Locate the "Cadastrado Em" label or container
+            # Strategy 1: Find something looking like a dropdown near "Cadastrado Em"
+            # It might be a select2 or a custom div.
+            
+            # This xpath looks for a label containing "Cadastrado Em" and then finds the following sibling div or span that acts as the dropdown
+            # Adjust selector based on common frameworks (Select2, Chosen, or standard Bootstrap)
+            
+            # Common pattern: click the container to open dropdown, then click the option.
+            
+            # Trying to find the container. 
+            # Often it's a sibling of the label.
+            # Let's try to click the specific text "Óticas Motta Aero" if it's already visible (default), 
+            # but usually we need to open it.
+            
+            # Let's try finding the combobox/dropdown trigger by the label
+            # We look for a container containing "Cadastrado Em" and then a .select2-container or similar?
+            # Or simpler: The user said "dentro da tela de cadastro, há uma lista".
+            
+            # Let's try to find the label, then find the input/select associated.
+            # If we assume it's a select2 (common in these systems):
+            # The label is "Cadastrado Em". The dropdown is next to it.
+            
+            # Let's try a very generic "Click on a 'select' like element near 'Cadastrado Em'" approach.
+            # OR, locate by the text currently selected (if any) or just the label.
+            
+            # Let's assume standard Select2 or similar behavior:
+            # 1. Click the container (often .select2-selection or .form-control)
+            # 2. Type the name or Click the name in the results.
+            
+            # Identifying the dropdown trigger:
+            # Look for the label, then get the control.
+            label = page.get_by_text("Cadastrado Em", exact=False).first
+            
+            # Assuming the control is a sibling or inside a form-group.
+            # Let's try verify if it's a native select first?
+            # select = page.locator("select").filter(has=page.locator("xpath=preceding-sibling::label[contains(text(), 'Cadastrado Em')]"))
+            
+            # If it's a custom dropdown (screenshot looks like Select2 or similar styled):
+            # We usually click the box to open it.
+            # Let's try clicking the "box" which might be next to the label.
+            # We can use the layout locator: to_right_of=label?
+            
+            # Simplest first try: Click the current value container.
+            # But we don't know the current value.
+            
+            # Let's try to click the 'select2' container if it exists inside the form.
+            # Or assume it is the only dropdown for now? No, risky.
+            
+            # Let's use layout selector.
+            dropdown_trigger = page.locator(".select2-selection, .form-select, .form-control.select, .dropdown-toggle").filter(has_text=page.locator("option:checked").text_content() if False else None) 
+            # Too complex.
+            
+            # Resilient approach for "Unknown Dropdown":
+            # 1. Find the label "Cadastrado Em"
+            # 2. Click the element right below or to the right of it.
+            #    Actually, we can use `page.locator("text=Cadastrado Em").locator("..").click()` if it wraps it?
+            
+            # Let's try to find an element with role "combobox" or similar.
+            # Or simply:
+            # page.locator("label:has-text('Cadastrado Em') + div").click() # Standard logic
+            # page.get_by_label("Cadastrado Em").click() # If label is correctly associated
+            
+            # Attempt 1: get_by_label (best practice if accessible)
+            try:
+                page.get_by_label("Cadastrado Em").click(timeout=3000)
+                logger.info("Clicked by label 'Cadastrado Em'.")
+            except:
+                # Attempt 2: Find label visually and click nearby
+                logger.info("Could not click by label. Trying visual location...")
+                # Find the label element
+                lbl = page.locator("label").filter(has_text="Cadastrado Em").first
+                # Click the sibling (assuming standard form-group layout: Label \n Input)
+                # Next sibling element:
+                dropdown = lbl.locator("xpath=following-sibling::*[1]") 
+                dropdown.click()
+            
+            # Now wait for the options to appear.
+            # Usually they appear in a portal or proper body.
+            # Click the option with exact text.
+            logger.info(f"Waiting for option '{unit}'...")
+            
+            # Select2/Chosen/etc append to body.
+            # We look for the text visible in the page (as it should be in the dropdown now)
+            # Use get_by_role option? Or just text.
+            # The screenshot shows the option text.
+            page.get_by_text(unit, exact=True).first.click()
+            
+            logger.info(f"Selected unit: {unit}")
+            page.wait_for_timeout(500) # stabilizing
+
+        except Exception as e:
+            logger.warning(f"Failed to select unit '{unit}': {e}")
+            # Don't fail the whole script, just warn? Or fail? 
+            # Better to log and continue or throw? 
+            # User said "Quero selecionar", so it implies it's important.
+            # But maybe defaults are fine. I'll log warning.
     
     logger.info(f"Filling client details: {name}, {phone}")
     

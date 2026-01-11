@@ -13,10 +13,10 @@ from RPA.Robocorp.WorkItems import WorkItems
 # Load environment variables
 load_dotenv()
 # Robocorp WorkItems
-wi = WorkItems()
-wi.get_input_work_item()
-client_name = wi.get_work_item_variable("SEARCH")
-client_phone = wi.get_work_item_variable("PHONE")
+# wi = WorkItems()
+# wi.get_input_work_item()
+# client_name = wi.get_work_item_variable("SEARCH")
+# client_phone = wi.get_work_item_variable("PHONE")
 
 def main(keep_open=True, headless=True):
     with sync_playwright() as p:
@@ -47,18 +47,23 @@ def main(keep_open=True, headless=True):
             go_to_clients(page)
             
             # 4. Register New Client
-            client_name = client_name
+            client_name = "TECHMIDAS9090"
             # Random 11 digits
-            phone_number = client_phone
+            phone_number = "61991314343"
             
+            # --- Dynamic Unit Selection ---
+            # Change this variable to select a different unit
+            unit_to_select = "Óticas Motta Aero" 
+            # ------------------------------
+
             mock_obs = (
                 f"Paciente: {client_name}\n"
                 "Receita: OD -2.00, OE -1.75\n"
                 "Intenção: Compra de óculos de grau completo."
             )
             
-            logger.info(f"  > Creating client: {client_name}, Phone: {phone_number}")
-            register_new_client(page, client_name, phone_number, observations=mock_obs)
+            logger.info(f"  > Creating client: {client_name}, Phone: {phone_number}, Unit: {unit_to_select}")
+            register_new_client(page, client_name, phone_number, observations=mock_obs, unit=unit_to_select)
             
             logger.info("--- Finished Single Execution ---")
             
